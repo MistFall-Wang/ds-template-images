@@ -980,6 +980,32 @@ def heap_lazy():
           leg=[('del', '已经过期，但还留在堆里'), ('chg', '浮到堆顶时才丢掉'), ('hit', '有效的堆顶')])
 
 
+def heap_build():
+    heap_panels('heap-build', [
+        ([5, 3, 8, 1, 2], {1: 'new'}, {}, ['① 从下标 1 开始', '3 比较小的孩子 1 大']),
+        ([5, 1, 8, 3, 2], {3: 'new'}, {3: 'red'}, ['② 3 和 1 交换', '下标 1 这棵子树已经是堆']),
+        ([1, 5, 8, 3, 2], {1: 'new'}, {1: 'red'}, ['③ 轮到下标 0：5 和 1 交换', '5 还比孩子 2 大，继续']),
+        ([1, 2, 8, 3, 5], {4: 'new'}, {4: 'red'}, ['④ 5 和较小的孩子 2 交换', '建好了：[1, 2, 8, 3, 5]']),
+    ], '建堆 [5, 3, 8, 1, 2]：从最后一个有孩子的节点开始，倒着下沉')
+
+
+def heap_median():
+    small, large, rows = [], [], []
+    for x in [5, 2, 8, 1]:
+        heapq.heappush(small, -x)
+        heapq.heappush(large, -heapq.heappop(small))
+        if len(large) > len(small):
+            heapq.heappush(small, -heapq.heappop(large))
+        a, b = sorted(-v for v in small), sorted(large)
+        med = f'{a[-1]}' if len(a) > len(b) else f'({a[-1]} + {b[0]}) / 2 = {(a[-1] + b[0]) / 2}'
+        rows.append([('t', f'加入 {x}', INK), [(v, 'hit' if i == len(a) - 1 else 'n') for i, v in enumerate(a)],
+                     [(v, 'hit' if i == 0 else 'n') for i, v in enumerate(b)], ('t', med, 'org')])
+    table('heap-median', ['操作', 'small：较小的一半（最大堆）', 'large：较大的一半（最小堆）', '中位数'],
+          [120, 270, 270, 200], rows,
+          leg=[('hit', '堆顶：small 里最大的，large 里最小的')],
+          foot='个数是奇数：small 的堆顶；是偶数：两个堆顶的平均')
+
+
 # ---------- hash ----------
 
 def hash_buckets():
@@ -1105,6 +1131,8 @@ if __name__ == '__main__':
     heap_topk()
     heap_sort()
     heap_lazy()
+    heap_build()
+    heap_median()
     hash_buckets()
     set_venn()
     two_sum()
