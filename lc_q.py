@@ -114,7 +114,7 @@ def level_mixed():
     s.text(LX, 18, '同一棵树，两种循环', 14.5, INK, 'start', bold=True)
     draw(s, 110, 70, root, st)
     for k in range(4):
-        s.text(LX, 70 + k * 62, f'第 {k} 层', 12.5, SUB, 'start')
+        s.text(LX, 70 + k * 62, f'第 {k + 1} 层', 12.5, SUB, 'start')
     # 不分层：取出 1、2 之后的队列
     queue = deque([root])
     for _ in range(2):
@@ -126,7 +126,7 @@ def level_mixed():
     x = 440
     s.text(x, 58, '只写 while queue，取出 1、2 之后的队列：', 13.5, INK, 'start', bold=True)
     cells(s, x, 76, [(v, st[v]) for v in mixed])
-    s.text(x + 150, 93, '第 1 层的 3 和第 2 层的 4、5 排在一起', 13, COL['red'], 'start', bold=True)
+    s.text(x + 150, 93, '第 2 层的 3 和第 3 层的 4、5 排在一起', 13, COL['red'], 'start', bold=True)
     s.text(x, 132, '节点还是按层序出队的，但是看不出一层在哪里结束', 13, SUB, 'start')
     lv = levels_of(root)
     s.text(x, 186, '加上 for _ in range(len(queue))，每一轮开始时的队列：', 13.5, INK, 'start', bold=True)
@@ -145,7 +145,7 @@ def level_trace():
     st = level_styles(root)
     draw(s, 110, 62, root, st)
     for k in range(4):
-        s.text(LX, 62 + k * 62, f'第 {k} 层', 12.5, SUB, 'start')
+        s.text(LX, 62 + k * 62, f'第 {k + 1} 层', 12.5, SUB, 'start')
     x = 430
     for dx, h in ((0, '进入 for 时的队列'), (180, 'len(queue)'), (275, '取出的 level'), (410, '放进去的孩子')):
         s.text(x + dx, 18, h, 13, SUB, 'start', bold=True)
@@ -182,9 +182,9 @@ def level_right():
     for k, v in enumerate(last):
         x, y = pos[v]
         s.arrow(right, y, x + 24, y, 'grn')
-        s.text(right + 12, y, f'第 {k} 层看到 {v}', 13.5, COL['grn'], 'start', bold=True)
+        s.text(right + 12, y, f'第 {k + 1} 层看到 {v}', 13.5, COL['grn'], 'start', bold=True)
     s.text(right + 70, 30, '眼睛在这一侧', 13, SUB, 'start')
-    s.text(LX, 300, f'答案 {last}。节点 7 在左子树里，但是第 3 层只有它，右边没有东西挡住', 13.5, INK, 'start', bold=True)
+    s.text(LX, 300, f'答案 {last}。节点 7 在左子树里，但是第 4 层只有它，右边没有东西挡住', 13.5, INK, 'start', bold=True)
     walk, node = [], root
     while node:
         walk.append(node.val)
@@ -205,7 +205,7 @@ def level_zigzag():
     left_to_right, result = True, []
     for k, level in enumerate(lv):
         y = 45 + k * 62
-        s.text(LX, 62 + k * 62, f'第 {k} 层', 12.5, SUB, 'start')
+        s.text(LX, 62 + k * 62, f'第 {k + 1} 层', 12.5, SUB, 'start')
         vals = [n.val for n in level]
         cells(s, x, y, vals)
         s.text(x + 150, y + 17, str(left_to_right), 14, INK, 'start', bold=True, mono=True)
@@ -269,7 +269,7 @@ def level_connect_o1():
         if node.next:
             cross.append((node.right.val, node.next.left.val))
         node = node.next
-    s.text(LX, 18, 'leftmost = 2：站在已经连好的第 1 层，顺着 next 走，把第 2 层连起来', 14.5, INK, 'start', bold=True)
+    s.text(LX, 18, 'leftmost = 2：站在已经连好的第 2 层，顺着 next 走，把第 3 层连起来', 14.5, INK, 'start', bold=True)
     pos = draw(s, 70, 70, root, {2: 'hit', 3: 'hit'}, dx=62)
     next_arrows(s, pos, [(2, 3)], 'grn')
     next_arrows(s, pos, same, 'org')
@@ -280,7 +280,7 @@ def level_connect_o1():
                      '    ' + '、'.join(f'{a}.next = {b}' for a, b in same),
                      ('红色 ②：node.right.next = node.next.left', 'red'),
                      '    ' + '、'.join(f'{a}.next = {b}' for a, b in cross) + '（node = 2，node.next = 3）'], gap=25)
-    s.text(LX, 232, '① 连的是同一个父亲的两个孩子；② 连的是相邻两个父亲之间的那一对，要靠父亲的 next 才找得到', 13.5, SUB, 'start')
+    s.text(LX, 232, '① 连的是同一个父节点的两个孩子；② 连的是相邻两个父节点之间的那一对，要靠父节点的 next 才找得到', 13.5, SUB, 'start')
     s.save('lcq-level-connect-o1')
 
 

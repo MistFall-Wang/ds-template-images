@@ -94,19 +94,19 @@ def rand_set():
     nums = [5, 8, 3, 9]
     pos = {v: i for i, v in enumerate(nums)}
     x = 8
-    snaps = [('开始', [], list(nums), dict(pos), {}, '要删 8：pos[8] = 1，它在下标 1')]
+    snaps = [('开始', [], list(nums), dict(pos), {}, '要删 8：index_of[8] = 1，它在下标 1')]
     i, last = pos[x], nums[-1]
     nums[i] = last
     snaps.append(('① 最后一个抄过来', [f'nums[{i}] = {last}'], list(nums), dict(pos), {i: 'chg'}, f'最后一个数 {last} 盖住下标 {i} 上的 {x}'))
     pos[last] = i
-    snaps.append(('② 改它的下标', [f'pos[{last}] = {i}'], list(nums), dict(pos), {i: 'chg'}, f'{last} 搬家了，pos 里跟着改'))
+    snaps.append(('② 改它的下标', [f'index_of[{last}] = {i}'], list(nums), dict(pos), {i: 'chg'}, f'{last} 搬家了，index_of 里跟着改'))
     nums.pop()
     del pos[x]
-    snaps.append(('③ 删掉末尾和 8', ['nums.pop()', f'del pos[{x}]'], list(nums), dict(pos), {}, '末尾那份多余的删掉，O(1)'))
+    snaps.append(('③ 删掉末尾和 8', ['nums.pop()', f'del index_of[{x}]'], list(nums), dict(pos), {}, '末尾那份多余的删掉，O(1)'))
     s = S()
     X, y = 210, 48
     s.text(X, 10, 'nums（下标在上面）', 13, SUB, 'start')
-    s.text(X + 230, 10, 'pos（值 → 下标）', 13, SUB, 'start')
+    s.text(X + 230, 10, 'index_of（值 → 下标）', 13, SUB, 'start')
     for title, code, ns, ps, hot, nt in snaps:
         lab(s, y, title, code)
         for j, v in enumerate(ns):
@@ -128,7 +128,7 @@ def uf_grid():
     m, n = len(grid), len(grid[0])
     s = S()
     X, Y, C = 80, 58, 56
-    s.text(LX, 18, '格子 (row, col) 的编号 = row * n + col（这里 n = 4 列）', 14.5, INK, 'start', bold=True)
+    s.text(LX, 18, '格子 (row, col) 的编号 = row * cols + col（这里 cols = 4）', 14.5, INK, 'start', bold=True)
     for c in range(n):
         s.text(X + c * C + (C - 6) / 2, Y - 14, f'col {c}', 12, SUB, mono=True)
     unions = []

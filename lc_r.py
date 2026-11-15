@@ -50,7 +50,7 @@ def climb_tree(name, memo):
 
     build(5, 0, True)
     s = S()
-    title = ('加上「记下来」：每个 i 只真正算一次，一共 %d 次调用' if memo else '暴力递归 ways(5)：一共 %d 次调用') % len(order)
+    title = ('加上「记下来」：每个 i 只真正算一次，一共 %d 次调用' if memo else '暴力递归 climb_stairs(5)：一共 %d 次调用') % len(order)
     s.text(LX, 20, title, 15, INK, 'start', bold=True)
     tree(s, 40, 70, nodes, edges)
     if memo:
@@ -58,7 +58,7 @@ def climb_tree(name, memo):
         legend(s, LX, 350, [('n', '第一次算，算完记进 memo'), ('hit', '已经记过，直接查到'), ('del', '不会再调用')])
     else:
         assert len(order) == 15
-        counts = '、'.join(f'ways({i}) {order.count(i)} 次' for i in (3, 2, 1, 0))
+        counts = '、'.join(f'参数 {i} 算了 {order.count(i)} 次' for i in (3, 2, 1, 0))
         legend(s, LX, 350, [('n', '第一次算这个 i'), ('chg', '重复算')])
         s.text(LX, 392, '同一个问题被算了很多遍：' + counts, 14, INK, 'start', bold=True)
     s.save(name)
