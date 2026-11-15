@@ -118,14 +118,14 @@ def lcd_reverse():
             links[n - 1] = ('r', 'line')
         lab(s, y, '开始' if k == 0 else f'第 {k} 轮之后')
         xs = row(s, DX, y, vals, links, {i: 'hit' for i in range(k)})
-        marks = [(xs[k], 'prev', 'grn'), (xs[k + 1], 'cur', 'blue')]
+        marks = [(xs[k], 'prev', 'grn'), (xs[k + 1], 'current', 'blue')]
         ptrs(s, y + NH, marks)
         if k == 0:
-            note(s, xs[-1] + 44, y, 'prev = None，cur = head')
+            note(s, xs[-1] + 44, y, 'prev = None，current = head')
         elif k < n:
             note(s, xs[-1] + 44, y, f'{vals[k - 1]} 掉头指向前面；{vals[k - 1]} 和 {vals[k]} 之间断开')
         else:
-            note(s, xs[-1] + 44, y, 'cur 走到 None，结束。新的头是 prev')
+            note(s, xs[-1] + 44, y, 'current 走到 None，结束。新的头是 prev')
         y += RH
     legend(s, DX, y, [('hit', '已经掉头的节点'), ('chg', '红色箭头 = 这一轮改的指针')])
     s.save('lcd-reverse')
@@ -219,9 +219,9 @@ def lcd_palindrome():
     ptrs(s, y + NH, [(xs[n], 'prev', 'grn')])
     note(s, xs[-1] + 40, y, '两头都指向中间的 3')
     y += RH
-    lab(s, y, '③ 两头往中间比', 'q 走到 None 为止')
+    lab(s, y, '③ 两头往中间比', 'right 走到 None 为止')
     xs = row(s, DX, y, vals, links, {i: 'hit' for i in range(mid, n)})
-    ptrs(s, y + NH, [(xs[1], 'p', 'blue'), (xs[n], 'q', 'grn')])
+    ptrs(s, y + NH, [(xs[1], 'left', 'blue'), (xs[n], 'right', 'grn')])
     note(s, xs[-1] + 40, y, '比 3 次：1 = 1，2 = 2，3 = 3，是回文')
     s.arrow(xs[1] + 24, y + NH + 30, xs[1] + 60, y + NH + 30, 'blue')
     s.arrow(xs[n] - 24, y + NH + 30, xs[n] - 60, y + NH + 30, 'grn')
@@ -292,7 +292,7 @@ def lcd_lru_structure():
     nodes = c.dump()                                  # [(1, 10), (3, 30), (2, 20)]
     DX, y = 150, 24
     ly = y + 110
-    lab(s, y, 'dict', 'key → 节点')
+    lab(s, y, 'cache（dict）', 'key → 节点')
     lab(s, ly, '双链表', '按使用时间排队')
     items = ['head'] + [(f'{k}:{v}', 'n') for k, v in nodes] + ['tail']
     pos = chain(s, DX, ly, items, double=True)
@@ -302,7 +302,7 @@ def lcd_lru_structure():
         s.arrow(x, y + NH + 3, x, ly - 4, 'org')
     s.text(cxp(pos, 1), ly + NH + 20, '最近用过', 13.5, COL['grn'], bold=True)
     s.text(cxp(pos, len(nodes)), ly + NH + 20, '最久没用，满了先淘汰它', 13.5, COL['red'], bold=True)
-    note(s, endx(pos) + 26, y, '查 key：dict 一步找到节点')
+    note(s, endx(pos) + 26, y, '查 key：cache 一步找到节点')
     note(s, endx(pos) + 26, ly, '节点里写的是 key:value')
     s.save('lcd-lru-structure')
 
@@ -327,14 +327,149 @@ def lcd_lru_trace():
             st = 'hit'
         lst = [(f'{k}:{v}', st if k == key else 'n') for k, v in c.dump()]
         rows.append([name, lst, ', '.join(map(str, sorted(c.d))), ('t', ret, 'red' if ret == '-1' else 'grn'), why])
-    table('lcd-lru-trace', ['操作', '链表（左边最近用，右边最久没用）', 'dict 里的 key', '返回', '说明'],
+    table('lcd-lru-trace', ['操作', '链表（左边最近用，右边最久没用）', 'cache 里的 key', '返回', '说明'],
           [110, 270, 120, 60, 340], rows, cw=52,
           foot='容量 capacity = 2',
           leg=[('new', '新插入的节点'), ('hit', '被访问、挪到最前的节点')])
 
 
+# ---------- 基本操作图的重画（变量名改成 node / new_node） ----------
+import make_diagrams as md
+
+
+def _renamed(fn, *args, **kw):
+    """Run a make_diagrams drawing function with pointer label p -> node and an lcd- file name."""
+    old_ptr, old_save, old_note = md.ptr, S.save, md.note
+    md.note = lambda s, x, y, text, color=SUB: old_note(s, x, y, text.replace('p 从', 'node 从'), color)
+    md.ptr = lambda s, x, y, label, color='blue': old_ptr(s, x, y, 'node' if label in ('p', 'k') else label, color)
+    S.save = lambda self, name, pad=20: old_save(self, 'lcd-' + name, pad)
+    try:
+        fn(*args, **kw)
+    finally:
+        md.ptr, S.save, md.note = old_ptr, old_save, old_note
+
+
+def lcd_basic():
+    sl = ['head', 'a', 'b', 'c', 'None']
+    dl = ['head', 'a', 'b', 'c', 'tail']
+    _renamed(md.sll_overview)
+    _renamed(md.dll_overview)
+    _renamed(md.ins_single, 'sll-add-head', ['head', 'a', 'b', 'None'], 0, 'new_node.next = head', 'head = new_node')
+    _renamed(md.ins_single, 'sll-add-after', ['···', 'node', '后一个', '···'], 1,
+             'new_node.next = node.next', 'node.next = new_node')
+    _renamed(md.rem_single, 'sll-remove-after', ['···', 'node', '要删的', '后一个', '···'], 1,
+             'node.next = node.next.next')
+    _renamed(md.walk, 'sll-traverse', sl,
+             [(1, 'node = head，输出 a', None, 'blue'), (2, 'node = node.next，输出 b', None, 'blue'),
+              (3, 'node = node.next，输出 c', None, 'blue'), (4, 'node 是 None，结束', None, 'red')])
+    _renamed(md.walk, 'sll-find', sl,
+             [(1, 'a != c，往后走', None, 'blue'), (2, 'b != c，往后走', None, 'blue'),
+              (3, 'c == c，找到，返回 node', 'hit', 'grn')])
+    _renamed(md.walk, 'sll-get', sl,
+             [(1, 'node = head，这是第 0 个', None, 'blue'), (2, 'node = node.next，第 1 个', None, 'blue'),
+              (3, 'node = node.next，第 2 个，返回 node', 'hit', 'grn')], labels=['起点', '走 1 步', '走 2 步'])
+    _renamed(md.walk, 'dll-traverse', dl,
+             [(1, 'node = head.next，输出 a', None, 'blue'), (2, 'node = node.next，输出 b', None, 'blue'),
+              (3, 'node = node.next，输出 c', None, 'blue'), (4, 'node 是 tail，结束', None, 'red')], double=True)
+    _renamed(md.walk, 'dll-find', dl,
+             [(1, 'a != b，往右走', None, 'blue'), (2, 'b == b，找到，返回 node', 'hit', 'grn')], double=True)
+    for name, double in (('lcd-sll-modify', False), ('lcd-dll-modify', True)):
+        s = S()
+        DX, y = 110, 20
+        pre = ['head', 'a', 'b', 'c', 'tail' if double else 'None']
+        lab(s, y, '修改前')
+        pos = chain(s, DX, y, pre, double=double)
+        ptr(s, cxp(pos, 2), y + NH, 'node', 'blue')
+        y += 104
+        lab(s, y, '修改后')
+        pre[2] = ('y', 'chg')
+        pos = chain(s, DX, y, pre, double=double)
+        ptr(s, cxp(pos, 2), y + NH, 'node', 'red')
+        note(s, endx(pos) + 30, y, 'node.val = y：只有值变了，指针一根没动')
+        s.save(name)
+
+
+def lcd_dll_add():
+    s = S()
+    DX, G, y = 280, 124, 22
+    items = ['···', 'node', '右邻居', '···']
+    lab(s, y, '插入前')
+    chain(s, DX, y, items, double=True, gap=G)
+    y += 84
+    steps = [('第 1 步：接 x 自己的两根线', ['① new_node.prev = node', '② new_node.next = node.next']),
+             ('第 2 步：改远的右邻居', ['③ node.next.prev = new_node']),
+             ('第 3 步：改近的 node', ['④ node.next = new_node'])]
+    for n, (title, code) in enumerate(steps, 1):
+        lab(s, y + 40, title, code)
+        links = {} if n == 1 else {1: ('line', None)} if n == 2 else {1: (None, None)}
+        pos = chain(s, DX, y, items, double=True, links=links, gap=G)
+        kx, rx = cxp(pos, 1), cxp(pos, 2)
+        xl, xy = (kx + rx) / 2 - NW / 2, y + 88
+        s.node(xl, xy, 'x', 'new')
+        K, R = (kx, y + NH + 4), (rx, y + NH + 4)
+        XL, XR = (xl - 3, xy + NH / 2), (xl + NW + 3, xy + NH / 2)
+        c12 = 'red' if n == 1 else 'line'
+        s.arrow(*XL, *K, c12, off=6, label='①')
+        s.arrow(*XR, *R, c12, off=-6, label='②')
+        if n >= 2:
+            s.arrow(*R, *XR, 'red' if n == 2 else 'line', off=-6, label='③')
+        if n == 3:
+            s.arrow(*K, *XL, 'red', off=6, label='④')
+        if n == 2:
+            note(s, endx(pos) + 24, y, '靠 node.next 找到右邻居，所以必须在 ④ 之前', COL['red'])
+        y += 168
+    lab(s, y, '结果')
+    chain(s, DX, y, ['···', 'node', ('x', 'new'), '右邻居', '···'], double=True, gap=G - 71)
+    legend(s, DX, y + 62, [('new', '新节点 new_node，值是 x'), ('chg', '红色箭头 = 这一步改的指针')])
+    s.save('lcd-dll-add-right')
+
+
+def lcd_dll_remove():
+    s = S()
+    DX, G, y = 280, 64, 22
+    items = ['···', '左邻居', 'node', '右邻居', '···']
+    lab(s, y, '删除前')
+    chain(s, DX, y, items, double=True, gap=G)
+    y += 108
+    lab(s, y, '① 左邻居跳过 node', 'node.prev.next = node.next')
+    pos = chain(s, DX, y, items, double=True, links={1: (None, 'line')}, gap=G)
+    xa, xc = pos[1][0] + NW - 12, pos[3][0] + 12
+    s.curve(xa, y - 3, xc, y - 3, -19, 'red', label='①')
+    y += 120
+    lab(s, y, '② 右邻居跳过 node', 'node.next.prev = node.prev')
+    it = ['···', '左邻居', ('node', 'del'), '右邻居', '···']
+    pos = chain(s, DX, y, it, double=True, links={1: (None, 'gry'), 2: ('gry', None)}, gap=G)
+    s.curve(xa, y - 3, xc, y - 3, -19, 'line', label='①')
+    s.curve(xc, y + NH + 3, xa, y + NH + 3, 19, 'red', label='②')
+    note(s, endx(pos) + 24, y, 'node 自己的 prev、next 没动（虚线），所以 ①② 谁先都行')
+    y += 112
+    lab(s, y, '结果')
+    chain(s, DX, y, ['···', '左邻居', '右邻居', '···'], double=True, gap=G)
+    s.save('lcd-dll-remove')
+
+
+def lcd_dll_ends():
+    s = S()
+    DX, y, RH = 210, 20, 76
+    o = 'org'
+    rows = [
+        ('原链表', ['head', 'a', 'b', 'tail'], {}, ''),
+        ('add_right(head, x)', ['head', ('x', 'new'), 'a', 'b', 'tail'], {0: o, 1: o}, '插到最左边：node 是 head，右邻居是 a'),
+        ('add_left(tail, x)', ['head', 'a', 'b', ('x', 'new'), 'tail'], {2: o, 3: o}, '插到最右边：等于 add_right(b, x)'),
+        ('空链表', ['head', 'tail'], {}, ''),
+        ('add_right(head, x)', ['head', ('x', 'new'), 'tail'], {0: o, 1: o}, '空链表不用特判：node 是 head，右邻居是 tail'),
+    ]
+    NX = DX + 5 * NW + 4 * GAP + 24
+    for title, items, links, nt in rows:
+        s.text(LX, y + NH / 2, title, 13.5 if '(' in title else 15, INK, 'start', bold=True, mono='(' in title)
+        chain(s, DX, y, items, double=True, links=links)
+        note(s, NX, y, nt)
+        y += RH
+    s.save('lcd-dll-ends')
+
+
 if __name__ == '__main__':
     for f in (lcd_merge, lcd_remove_nth, lcd_reverse, lcd_middle, lcd_cycle, lcd_palindrome,
-              lcd_lru_structure, lcd_lru_trace):
+              lcd_lru_structure, lcd_lru_trace, lcd_basic, lcd_dll_add, lcd_dll_remove, lcd_dll_ends):
         f()
     print('done')

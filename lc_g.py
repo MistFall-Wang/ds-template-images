@@ -4,7 +4,9 @@
 Run:  python3 lc_g.py
 """
 from make_diagrams import *  # noqa: F401,F403
-from make_diagrams_algo import graph, grid, lines, panel_grid, row  # noqa: F401
+from make_diagrams_algo import graph, grid, inf, lines, panel_grid, row  # noqa: F401
+
+INF = float('inf')
 
 DIRS = ((1, 0), (-1, 0), (0, 1), (0, -1))          # 下、上、右、左，和正文代码一致
 
@@ -93,16 +95,16 @@ def prereq():
     pos = {0: (0, 60), 1: (110, 0), 2: (110, 120), 3: (220, 60)}
     graph(s, 50, 96, pos, [(b, a) for a, b in pre])
     ax = 360
-    s.text(ax, 78, '建出来的邻接表：g[b].append(a)', 14, INK, 'start', bold=True)
+    s.text(ax, 78, '建出来的邻接表：graph[b].append(a)', 14, INK, 'start', bold=True)
     for a in range(n):
         y = 100 + a * 40
-        s.text(ax, y + 17, f'g[{a}]', 14, INK, 'start', bold=True, mono=True)
-        s.arrow(ax + 46, y + 17, ax + 72, y + 17, 'gry')
+        s.text(ax, y + 17, f'graph[{a}]', 14, INK, 'start', bold=True, mono=True)
+        s.arrow(ax + 76, y + 17, ax + 102, y + 17, 'gry')
         if g[a]:
-            row(s, ax + 80, y, g[a], 'n', cw=40)
+            row(s, ax + 110, y, g[a], 'n', cw=40)
         else:
-            s.text(ax + 82, y + 17, '空', 13.5, COL['gry'], 'start')
-    s.text(LX, 262, 'g[0] = [1, 2]：学完 0 才能学 1 和 2。方向写反，拓扑排序出来的顺序就是倒的', 13.5, SUB, 'start')
+            s.text(ax + 112, y + 17, '空', 13.5, COL['gry'], 'start')
+    s.text(LX, 262, 'graph[0] = [1, 2]：学完 0 才能学 1 和 2。方向写反，拓扑排序出来的顺序就是倒的', 13.5, SUB, 'start')
     s.save('lcg-prereq')
 
 
@@ -649,7 +651,133 @@ def unmark():
     s.save('lcg-unmark')
 
 
+# ---------- 替换旧图里的旧变量名（gr-store / gr-prim / gr-hungarian） ----------
+
+def store():
+    s = S()
+    n, E = 4, [(0, 1), (0, 2), (1, 3)]
+    adj = [[] for _ in range(n)]
+    M = [[0] * n for _ in range(n)]
+    for a, b in E:
+        adj[a].append(b)
+        adj[b].append(a)
+        M[a][b] = M[b][a] = 1
+    s.text(LX, 18, '图', 14.5, INK, 'start', bold=True)
+    graph(s, 40, 62, {0: (60, 0), 1: (20, 70), 2: (100, 70), 3: (20, 140)}, E, directed=False)
+    ax = 230
+    s.text(ax, 18, '邻接表：graph[a] = a 的邻居', 14.5, INK, 'start', bold=True)
+    for a in range(n):
+        y = 46 + a * 44
+        s.text(ax, y + 17, f'graph[{a}]', 14, INK, 'start', bold=True, mono=True)
+        s.arrow(ax + 76, y + 17, ax + 102, y + 17, 'gry')
+        row(s, ax + 110, y, adj[a], 'n', cw=40)
+    mx = 520
+    s.text(mx, 18, '邻接矩阵：graph[a][b] = 1 表示 a、b 之间有边', 14.5, INK, 'start', bold=True)
+    for k in range(n):
+        s.text(mx + 36 + k * 38 + 17, 48, k, 13, SUB, bold=True, mono=True)
+        s.text(mx + 16, 62 + k * 38 + 17, k, 13, SUB, bold=True, mono=True)
+    grid(s, mx + 36, 62, M, lambda i, j: 'new' if M[i][j] else 'off', cw=38)
+    s.text(LX, 244, '无向边 0–1 存两次：邻接表里 graph[0] 有 1、graph[1] 有 0；矩阵里 graph[0][1] 和 graph[1][0] 都是 1',
+           13.5, SUB, 'start')
+    s.save('lcg-store')
+
+
+def prim():
+    n = 4
+    pos = {0: (0, 0), 1: (130, 0), 2: (0, 110), 3: (130, 110)}
+    E = [(0, 1, 1), (0, 2, 4), (1, 2, 2), (1, 3, 6), (2, 3, 3)]
+    mat = [[INF] * n for _ in range(n)]
+    for a, b, weight in E:
+        mat[a][b] = mat[b][a] = weight
+    dist, via = [INF] * n, [None] * n
+    dist[0] = 0
+    in_tree, total, tree_e = [False] * n, 0, set()
+    states = [(dist[:], set(), None, set(), set(), ['从 0 号点开始', 'total = 0'])]
+    for _ in range(n):
+        node = -1
+        for j in range(n):
+            if not in_tree[j] and (node == -1 or dist[j] < dist[node]):
+                node = j
+        in_tree[node] = True
+        total += dist[node]
+        if via[node] is not None:
+            tree_e.add((via[node], node))
+        upd = set()
+        for j in range(n):                          # 和正文模板一样：不管 j 连没连上都更新
+            if mat[node][j] < dist[j]:
+                dist[j], via[j] = mat[node][j], node
+                upd.add(j)
+        cap = [f'挑中 {node}（边长 {dist[node]}），total = {total}',
+               '更新：' + ('，'.join(f'{j} 变成 {dist[j]}' for j in sorted(upd)) if upd else '没有')]
+        states.append((dist[:], {j for j in range(n) if in_tree[j]}, node, upd, set(tree_e), cap))
+
+    def draw(s, ox, oy, k):
+        dist, it, node, upd, te, cap = states[k]
+        es = [(a, b, c, 'grn' if (a, b) in te or (b, a) in te else 'line') for a, b, c in E]
+        st = {j: 'new' if j == node else 'hit' if j in it else 'n' for j in range(n)}
+        tag = {j: (f'dist={inf(dist[j])}', 'red' if j in upd else INK, 't' if j < 2 else 'b') for j in range(n)}
+        graph(s, ox + 36, oy + 36, pos, es, st, tag, directed=False)
+        lines(s, ox, oy + 196, cap, size=13, gap=20)
+
+    panel_grid('lcg-prim', 5, 222, 280, draw, titles=['开始'] + [f'第 {k} 轮' for k in range(1, 5)],
+               leg=[('new', '这一轮接进来的点'), ('hit', '已经连好的那一团')],
+               foot=f'dist = 这个点到「已经连好的那一团」最短的一条边；绿色的边 = 选中的边，总和 {total}')
+
+
+def hungarian():
+    Eg = [(0, 0), (0, 1), (1, 0), (2, 1), (2, 2)]
+    adj = [[] for _ in range(3)]
+    for a, b in Eg:
+        adj[a].append(b)
+    match = [-1] * 3
+    snaps = [({}, set(), None)]
+
+    def try_match(left_node, seen):
+        for right_node in adj[left_node]:
+            if right_node in seen:
+                continue
+            seen.add(right_node)
+            if match[right_node] == -1 or try_match(match[right_node], seen):
+                match[right_node] = left_node
+                return True
+        return False
+
+    for left_node in range(3):
+        before = {match[r]: r for r in range(3) if match[r] != -1}
+        assert try_match(left_node, set())
+        after = {match[r]: r for r in range(3) if match[r] != -1}
+        snaps.append((after, {(a, b) for a, b in before.items() if after.get(a) != b}, left_node))
+    caps = [['灰线 = 可以配对', '左边的点一个一个来找对象'], ['左 0：右 0 没人', '直接配上'],
+            ['左 1 只能配右 0，被左 0 占着', '问左 0：能换成右 1 → 右 0 让给左 1'],
+            ['左 2：右 1 被左 0 占着，谁都换不了', f'改试右 2，没人，配上 → 共 {sum(m != -1 for m in match)} 对']]
+    assert snaps[2][0] == {0: 1, 1: 0} and snaps[3][0] == {0: 1, 1: 0, 2: 2}
+
+    def draw(s, ox, oy, k):
+        m, moved, cur = snaps[k]
+        for a, b in Eg:
+            x1, y1, x2, y2 = ox + 76, oy + 27 + a * 58, ox + 164, oy + 27 + b * 58
+            if m.get(a) == b:
+                s.seg(x1, y1, x2, y2, 'grn', sw=3.5)
+            elif (a, b) in moved:
+                s.seg(x1, y1, x2, y2, 'red', dash=1, sw=2)
+            else:
+                s.seg(x1, y1, x2, y2, '#CBD5E1', sw=1.6)
+        for i in range(3):
+            s.node(ox + 20, oy + 10 + i * 58, f'左 {i}', 'new' if i == cur else 'hit' if i in m else 'n', w=54, h=34,
+                   size=14, mono=False)
+            s.node(ox + 166, oy + 10 + i * 58, f'右 {i}', 'hit' if i in m.values() else 'n', w=54, h=34, size=14, mono=False)
+        lines(s, ox, oy + 190, caps[k], size=13, gap=20)
+        cur_match = [next((a for a, b in m.items() if b == r), -1) for r in range(3)]
+        s.text(ox, oy + 236, f'match = {cur_match}', 12.5, COL['grn'], 'start', bold=True, mono=True)
+
+    panel_grid('lcg-hungarian', 4, 262, 300, draw, titles=['能连的边', '轮到左 0', '轮到左 1', '轮到左 2'],
+               foot='绿线 = 现在的配对；红虚线 = 被让出去的旧配对；match[right_node] = 右边这个点现在配的是左边的谁')
+
+
 if __name__ == '__main__':
+    store()
+    prim()
+    hungarian()
     prereq()
     clone()
     implicit()

@@ -66,7 +66,7 @@ def longest_consec():
         best = max(best, y - x + 1)
         rows.append([('t', f'x = {x}', INK), ('t', f'{x - 1} 不在', 'org'), ('t', f'是起点，往后数到 {y}', 'org'),
                      [(v, 'new' if v == x else 'n') for v in range(x, y + 1)] + [(f'长度 {y - x + 1}', 'sent')]])
-    table('lcf-longest-consec', ['当前 x', 'x - 1 在不在 s 里', '做什么', '从 x 往后数出来的一段'], [110, 170, 230, 330], rows,
+    table('lcf-longest-consec', ['当前 x', 'x - 1 在不在 num_set 里', '做什么', '从 x 往后数出来的一段'], [110, 230, 230, 330], rows,
           foot=f'nums = {nums}  →  最长的一段是 [1, 2, 3, 4]，答案 {best}')
 
 
@@ -127,13 +127,13 @@ def uf_grid():
     grid = ["1100", "1001", "0011"]
     m, n = len(grid), len(grid[0])
     s = S()
-    X, Y, C = 60, 58, 56
-    s.text(LX, 18, '格子 (r, c) 的编号 = r * n + c（这里 n = 4 列）', 14.5, INK, 'start', bold=True)
+    X, Y, C = 80, 58, 56
+    s.text(LX, 18, '格子 (row, col) 的编号 = row * n + col（这里 n = 4 列）', 14.5, INK, 'start', bold=True)
     for c in range(n):
-        s.text(X + c * C + (C - 6) / 2, Y - 14, f'c={c}', 12, SUB, mono=True)
+        s.text(X + c * C + (C - 6) / 2, Y - 14, f'col {c}', 12, SUB, mono=True)
     unions = []
     for r in range(m):
-        s.text(X - 12, Y + r * C + (C - 6) / 2, f'r={r}', 12, SUB, 'end', mono=True)
+        s.text(X - 12, Y + r * C + (C - 6) / 2, f'row {r}', 12, SUB, 'end', mono=True)
         for c in range(n):
             land = grid[r][c] == '1'
             s.node(X + c * C, Y + r * C, r * n + c, 'new' if land else 'off', w=C - 6, h=C - 6, size=16)
@@ -295,6 +295,158 @@ def trie_board():
     s.save('lcf-trie-board')
 
 
+# ---------- replacements for older diagrams that showed short names ----------
+
+def hash_buckets2():
+    s = S()
+    s.text(LX, 40, 'price["apple"] = 3', 14.5, INK, 'start', bold=True, mono=True)
+    s.node(250, 20, '"apple"', 'n', w=96, size=14)
+    s.arrow(349, 40, 396, 40)
+    s.node(400, 20, '哈希函数', 'sent', w=104, size=14, mono=False)
+    s.text(530, 40, '算出位置 2', 14, COL['org'], 'start', bold=True)
+    X, y, W = 110, 126, 124
+    s.arrow(452, 63, X + 2 * W + W / 2 - 2, y - 30, 'org')
+    s.text(LX, y - 16, '位置', 13, SUB, 'start')
+    for i in range(5):
+        s.text(X + i * W + W / 2 - 2, y - 16, i, 13, COL['org'] if i == 2 else SUB, bold=i == 2, mono=True)
+        s.node(X + i * W, y, 'apple : 3' if i == 2 else '', 'new' if i == 2 else 'off', w=W - 4, h=40, size=14)
+    s.text(LX, y + 72, '查 price["apple"]：再算一次位置，还是 2，直接去 2 号拿到 3，不用一个个找。', 14, INK, 'start')
+    s.text(LX, y + 98, '改 price["apple"] = 5：算出位置 2，把 2 号里的值换成 5。', 14, INK, 'start')
+    s.text(LX, y + 124, '删 del price["apple"]：算出位置 2，把 2 号清空。', 14, INK, 'start')
+    s.text(LX, y + 156, '（位置编号是示意，真实的由 Python 内部算）', 12.5, SUB, 'start')
+    s.save('lcf-hash-buckets')
+
+
+def set_venn2():
+    s = S()
+    for cx, col in ((170, '#2563EB'), (290, '#D97706')):
+        s.e.append(f'<circle cx="{cx}" cy="120" r="95" fill="{col}" fill-opacity="0.14" stroke="{col}" stroke-width="1.8"/>')
+    s.b(385, 215)
+    s.text(110, 18, 'first = {1, 2, 3}', 14, COL['blue'], bold=True, mono=True)
+    s.text(350, 18, 'second = {2, 3, 4}', 14, COL['org'], bold=True, mono=True)
+    for x, y, v in ((115, 120, 1), (230, 104, 2), (230, 138, 3), (345, 120, 4)):
+        s.text(x, y, v, 20, INK, bold=True, mono=True)
+    first, second = {1, 2, 3}, {2, 3, 4}
+    rows = ((f'first & second = {first & second}', '中间：两边都有'), (f'first | second = {first | second}', '三块全要'),
+            (f'first - second = {first - second}', '左边：只在 first 里'))
+    for i, (code, t) in enumerate(rows):
+        s.text(450, 76 + i * 44, code, 14.5, INK, 'start', bold=True, mono=True)
+        s.text(450, 96 + i * 44, t, 13, SUB, 'start')
+    s.save('lcf-set-venn')
+
+
+def group_by2():
+    words, g, rows = ['apple', 'bee', 'ant', 'bat'], {}, []
+    for word in words:
+        isnew = word[0] not in g
+        g.setdefault(word[0], []).append(word)
+        row = [('t', f'"{word}"', INK),
+               ('t', f'{word[0]} 不存在：自动建 []，再 append' if isnew else f'{word[0]} 已经有了：直接 append', 'org' if isnew else 'gry')]
+        for k in 'ab':
+            row.append([(k + ':', 'sent')] + [(v, 'new' if v == word else 'n') for v in g[k]] if k in g else '')
+        rows.append(row)
+    table('lcf-group-by', ['当前单词', '发生了什么', 'groups["a"]', 'groups["b"]'], [120, 300, 250, 220], rows, cw=30,
+          foot='words = ["apple", "bee", "ant", "bat"]，按首字母分组：groups[word[0]].append(word)')
+
+
+def uf_weighted2():
+    s = S()
+    X, y = 180, 20
+    lab(s, y, 'find(x) 之前')
+    for i, t in enumerate(('x', 'parent', 'root')):
+        s.node(X + i * 190, y, t, 'new' if t == 'root' else 'n', w=74, size=14)
+    s.arrow(X + 77, y + 20, X + 187, y + 20, 'line', label='dist[x] = 2', loff=-14, lsize=13)
+    s.arrow(X + 190 + 77, y + 20, X + 377, y + 20, 'line', label='dist[parent] = 3', loff=-14, lsize=13)
+    y += 104
+    lab(s, y + 30, 'find(x) 之后')
+    s.node(X, y, 'x', w=74, size=14)
+    s.node(X + 190, y + 66, 'parent', w=74, size=14)
+    s.node(X + 380, y + 30, 'root', 'new', w=74, size=14)
+    s.arrow(X + 77, y + 22, X + 377, y + 44, 'red', label='dist[x] = 2 + 3 = 5', loff=-15, lsize=13)
+    s.arrow(X + 190 + 77, y + 84, X + 377, y + 58, 'line')
+    s.text(X + 190 + 140, y + 100, 'dist[parent] = 3', 13, COL['line'], 'start', bold=True)
+    note(s, X + 480, y + 30, 'x 直接挂到根上，dist[x] 变成到根的距离')
+    y += 150
+    lab(s, y, 'union(a, b, distance)')
+    xs = [X, X + 130, X + 380, X + 510]
+    for x, t in zip(xs, ('a', 'root_a', 'root_b', 'b')):
+        s.node(x, y, t, 'new' if t.startswith('root') else 'n', w=74, size=14)
+    s.arrow(xs[0] + 77, y + 20, xs[1] - 3, y + 20, 'line')
+    s.arrow(xs[1] + 77, y + 20, xs[2] - 3, y + 20, 'red', label='dist[root_a] = distance', loff=-14, lsize=13)
+    s.arrow(xs[3] - 3, y + 20, xs[2] + 77, y + 20, 'line')
+    note(s, xs[3] + 100, y, '只在两个根之间连一条线')
+    s.save('lcf-uf-weighted')
+
+
+def heap_array2():
+    s = S()
+    vals = [1, 3, 2, 7, 4]
+    lv = {0: 'new', 1: 'n', 2: 'n', 3: 'hit', 4: 'hit'}
+    s.text(145, 18, '看成一棵树', 14.5, INK, bold=True)
+    heap_tree(s, 20, 62, vals, lv, idx=True)
+    big_arrow(s, 300, 120, '按层排')
+    s.text(520, 18, '实际存在 list 里', 14.5, INK, bold=True)
+    X = 420
+    for i in range(5):
+        s.text(X + i * 46 + 21, 78, i, 13, SUB, mono=True)
+    s.text(X - 12, 78, '下标', 13, SUB, 'end')
+    cells(s, X, 94, [(v, lv[i]) for i, v in enumerate(vals)], cw=43, ch=38)
+    s.text(X, 160, f'heap = {vals}', 14, INK, 'start', bold=True, mono=True)
+    s.text(X, 190, '每个节点都不大于它的两个孩子，所以堆顶 heap[0] 最小', 13.5, SUB, 'start')
+    legend(s, X, 214, [('new', '第 1 层'), ('n', '第 2 层'), ('hit', '第 3 层')])
+    s.save('lcf-heap-array')
+
+
+def heap_lazy2():
+    """Same four operations as the LazyHeap class in the heap section, computed here."""
+    heap, current, inserted, rows = [], {}, 0, []
+
+    def show(styles):
+        return [(f'({v},{k})', styles.get((v, k), 'n')) for v, k in sorted(heap)]
+
+    def cur():
+        return ('t', '{' + ', '.join(f'{k}: {v}' for k, v in current.items()) + '}', INK)
+
+    for x in (5, 3):
+        inserted += 1
+        current[inserted] = x
+        heapq.heappush(heap, (x, inserted))
+        rows.append([('t', f'insert({x})', INK), show({(x, inserted): 'new'}), cur(), f'第 {inserted} 个数是 {x}'])
+    current[2] = 8
+    heapq.heappush(heap, (8, 2))
+    rows.append([('t', 'change(2, 8)', INK), show({(3, 2): 'del', (8, 2): 'new'}), cur(), '再放一份新的，旧的 (3,2) 不删'])
+    stale = [e for e in heap if current.get(e[1]) != e[0]]
+    top = min(e for e in heap if e not in stale)
+    assert stale == [(3, 2)] and top == (5, 1)
+    rows.append([('t', 'top()', INK), show({(3, 2): 'chg', top: 'hit'}), cur(),
+                 '(3,2) 和 current[2] = 8 对不上，丢掉；(5,1) 对得上，返回 5'])
+    table('lcf-heap-lazy', ['操作', '堆里的 (值, 编号)，最左 = 堆顶', 'current（编号 → 现在的值）', '说明'],
+          [140, 290, 240, 440], rows, cw=58,
+          leg=[('del', '已经过期，但还留在堆里'), ('chg', '浮到堆顶时才丢掉'), ('hit', '有效的堆顶')])
+
+
+def strhash2():
+    s = S()
+    X, W, y = 110, 49, 14
+    s.text(LX, y + 6, '下标', 13, SUB, 'start')
+    for i in range(6):
+        s.text(X + i * W + 23, y + 6, i, 13, SUB, mono=True)
+    y += 24
+    s.text(LX, y + 19, 'text', 16, INK, 'start', bold=True, mono=True)
+    cells(s, X, y, [(ch, 'chg' if i < 3 else 'hit') for i, ch in enumerate('abcabc')], cw=46, ch=38)
+    y += 54
+    brace(s, X + 2, X + 6 * W - 5, y, 'prefix_hash[6]：前 6 个字符 "abcabc"', 'blue', up=False)
+    y += 42
+    brace(s, X + 2, X + 3 * W - 5, y, 'prefix_hash[3]：要去掉的', 'red', up=False)
+    brace(s, X + 3 * W + 2, X + 6 * W - 5, y, 'get(3, 5)：要的', 'grn', up=False)
+    TX = X + 6 * W + 60
+    s.text(TX, 50, 'get(3, 5) = prefix_hash[6] - prefix_hash[3] × BASE³', 15, INK, 'start', bold=True, mono=True)
+    s.text(TX, 80, 'prefix_hash[3] 乘 BASE³：左移 3 位，和 prefix_hash[6] 的高位对齐', 13.5, SUB, 'start')
+    s.text(TX, 104, '一减，前面的 "abc" 抵消，只剩后面这段', 13.5, SUB, 'start')
+    s.save('lcf-strhash')
+
+
 if __name__ == '__main__':
-    for f in (hash_chain, longest_consec, group_anagrams, rand_set, uf_grid, uf_redundant, uf_accounts, trie_wild, trie_board):
+    for f in (hash_chain, longest_consec, group_anagrams, rand_set, uf_grid, uf_redundant, uf_accounts, trie_wild, trie_board,
+              hash_buckets2, set_venn2, group_by2, uf_weighted2, heap_array2, heap_lazy2, strhash2):
         f()

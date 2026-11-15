@@ -390,8 +390,62 @@ def iv_arrows():
     s.save('lcc-iv-arrows')
 
 
+def pair_sum():
+    nums1, nums2, target = [1, 2, 7, 9], [1, 3, 4, 6], 11
+    s = S()
+    y, j = 50, 3
+    XB = 370
+    s.text(LX, 18, 'target = 11：i 在 nums1 上从左往右，j 在 nums2 上从右往左，都不回头', 14.5, INK, 'start', bold=True)
+    found = False
+    for i, x in enumerate(nums1):
+        while True:
+            tot = x + nums2[j]
+            found = tot == target
+            s.text(LX, y + 17, 'nums1', 14, INK, 'start', bold=True, mono=True)
+            ca = row(s, 84, y, nums1, [('hit' if found else 'new') if k == i else 'off' if k < i else 'n' for k in range(4)],
+                     cw=46)
+            marks(s, ca, y + 34, [('i', i, 'blue')])
+            s.text(300, y + 17, 'nums2', 14, INK, 'start', bold=True, mono=True)
+            cb = row(s, XB, y, nums2, [('hit' if found else 'new') if k == j else 'off' if k > j else 'n' for k in range(4)],
+                     cw=46)
+            marks(s, cb, y + 34, [('j', j, 'red')])
+            msg = '找到' if found else '太大：j 左移' if tot > target else '不够：换下一个 i（nums1[i] 变大，j 不用回头）'
+            s.text(XB + 4 * 46 + 30, y + 17, f'{x} + {nums2[j]} = {tot}，{msg}', 14, COL['grn'] if found else INK, 'start',
+                   bold=True)
+            y += 84
+            if tot > target and j > 0:
+                j -= 1
+                continue
+            break
+        if found:
+            break
+    s.save('lcc-pair-sum')
+
+
+def iv_cases():
+    s = S()
+    for k, (title, old, new, res, cap) in enumerate((
+            ('有重叠：start <= 上一个的右端点', (0, 170), (110, 270), [(0, 270)], '上一个的右端点延长到 max(它, end)'),
+            ('没有重叠：start > 上一个的右端点', (0, 110), (160, 270), [(0, 110), (160, 270)], '上一个定下来，[start, end] 新开一个'),
+            ('新区间被完全包住', (0, 270), (80, 180), [(0, 270)], '右端点不变：所以延长时要取 max'))):
+        ox = 24 + k * 330
+        if k:
+            s.seg(ox - 26, 14, ox - 26, 196, '#E5E7EB', sw=1)
+        s.text(ox, 22, title, 14.5, INK, 'start', bold=True)
+        bar(s, ox + old[0], ox + old[1], 74, 'blue')
+        s.text(ox + 2, 55, '上一个区间', 13, COL['blue'], 'start', bold=True)
+        bar(s, ox + new[0], ox + new[1], 116, 'org')
+        s.text(ox + new[0], 97, 'start', 13, COL['org'], 'start', bold=True, mono=True)
+        s.text(ox + new[1], 97, 'end', 13, COL['org'], 'end', bold=True, mono=True)
+        s.arrow(ox + 135, 132, ox + 135, 152, 'gry')
+        for a, b in res:
+            bar(s, ox + a, ox + b, 166, 'grn')
+        s.text(ox, 194, cap, 13.5, COL['grn'], 'start', bold=True)
+    s.save('lcc-iv-cases')
+
+
 if __name__ == '__main__':
     for f in (tp_forms, win_compare, win_short, win_fixed, three_sum, trap, fast_slow, iv_insert, iv_why_right,
-              iv_arrows):
+              iv_arrows, pair_sum, iv_cases):
         f()
     print('ok')

@@ -60,23 +60,23 @@ def calc():
     for c in s + '+':
         if c.isdigit():
             num = num * 10 + int(c)
-            rows.append([T(c), T(f'数字，num = {num}'), T(op), DASH, [(v, 'n') for v in stk]])
+            rows.append([T(c), T(f'数字，number = {num}'), T(op), DASH, [(v, 'n') for v in stk]])
         elif c != ' ':
             if op == '+':
-                stk.append(num); act = f'op 是 +：{num} 入栈'
+                stk.append(num); act = f'前面是 +：{num} 入栈'
             elif op == '-':
-                stk.append(-num); act = f'op 是 -：-{num} 入栈'
+                stk.append(-num); act = f'前面是 -：-{num} 入栈'
             elif op == '*':
-                a = stk.pop(); stk.append(a * num); act = f'op 是 *：弹出 {a}，{a} * {num} = {a * num} 入栈'
+                a = stk.pop(); stk.append(a * num); act = f'前面是 *：弹出 {a}，{a} * {num} = {a * num} 入栈'
             else:
-                a = stk.pop(); stk.append(int(a / num)); act = f'op 是 /：弹出 {a}，{a} / {num} 取整 = {int(a / num)} 入栈'
+                a = stk.pop(); stk.append(int(a / num)); act = f'前面是 /：弹出 {a}，{a} / {num} 取整 = {int(a / num)} 入栈'
             who = '末尾补的 +' if len(rows) == len(s) else c
-            rows.append([T(who), T(f'运算符，num = {num} 读完了'), T(op), T(act, 'red'),
+            rows.append([T(who), T(f'运算符，number = {num} 读完了'), T(op), T(act, 'red'),
                          [(v, 'new' if i == len(stk) - 1 else 'n') for i, v in enumerate(stk)]])
             op, num = c, 0
     assert sum(stk) == 12
-    table('lce-calc', ['读到', '它是', 'op（num 前面的运算符）', '按 op 结算 num', '栈（栈底 → 栈顶）'],
-          [110, 230, 200, 340, 170], rows, cw=44,
+    table('lce-calc', ['读到', '它是', 'prev_operator', '按 prev_operator 结算 number', 'stack（栈底 → 栈顶）'],
+          [110, 260, 150, 340, 170], rows, cw=44,
           leg=[('new', '这一步入栈的数')],
           foot=f's = "{s}"  →  栈里是 {stk}，加起来 = {sum(stk)}')
 
@@ -87,21 +87,21 @@ def decode():
     show = lambda: [(f'("{p}", {k})', 'n') for p, k in stk]
     for c in s:
         if c.isdigit():
-            num = num * 10 + int(c); act = T(f'数字，num = {num}'); cs = show()
+            num = num * 10 + int(c); act = T(f'数字，number = {num}'); cs = show()
         elif c == '[':
-            stk.append((cur, num)); act = T(f'进里层：("{cur}", {num}) 入栈，cur 清空', 'org')
+            stk.append((cur, num)); act = T(f'进里层：("{cur}", {num}) 入栈，current 清空', 'org')
             cur, num = '', 0
             cs = show(); cs[-1] = (cs[-1][0], 'new')
         elif c == ']':
             prev, k = stk.pop()
-            act = T(f'出里层：弹出 ("{prev}", {k})，cur = "{prev}" + "{cur}" * {k}', 'red')
+            act = T(f'出里层：弹出 ("{prev}", {k})，current = "{prev}" + "{cur}" * {k}', 'red')
             cur = prev + cur * k; cs = show()
         else:
-            cur += c; act = T('字母，接到 cur 后面'); cs = show()
+            cur += c; act = T('字母，接到 current 后面'); cs = show()
         rows.append([T(c), act, cs, T(f'"{cur}"', 'grn')])
     assert cur == 'accaccacc'
-    table('lce-decode', ['字符', '做什么', '栈：(外层已拼好的, 重复次数)', 'cur（当前这一层）'],
-          [70, 430, 280, 160], rows, cw=52,
+    table('lce-decode', ['字符', '做什么', 'stack：(外层已拼好的, 重复次数)', 'current（当前这一层）'],
+          [70, 470, 280, 180], rows, cw=52,
           leg=[('new', '新入栈：外层的状态')],
           foot=f's = "{s}"  →  "{cur}"')
 
@@ -113,7 +113,7 @@ def two_stacks():
         if op[0] == 'push':
             inn.append(op[1])
             rows.append([T(f'push({op[1]})'), [(v, 'new' if i == len(inn) - 1 else 'n') for i, v in enumerate(inn)],
-                         [(v, 'n') for v in out], T('放进 inn'), DASH])
+                         [(v, 'n') for v in out], T('放进 in_stack'), DASH])
         else:
             moved = not out
             if moved:
@@ -122,12 +122,12 @@ def two_stacks():
                     out.append(inn.pop())
             x = out.pop()
             rows.append([T('pop()'), [(v, 'n') for v in inn], [(v, 'n') for v in out] + [(x, 'chg')],
-                         T(f'out 空：inn 的 {n} 个全部倒进 out，再弹' if moved else 'out 不空：直接弹 out 的栈顶',
+                         T(f'out_stack 空：in_stack 的 {n} 个全部倒过去，再弹' if moved else 'out_stack 不空：直接弹它的栈顶',
                            'red' if moved else INK), T(str(x), 'grn')])
-    table('lce-two-stacks', ['操作', 'inn（栈底 → 栈顶）', 'out（栈底 → 栈顶）', '这一步', '返回'],
-          [110, 200, 200, 350, 60], rows,
-          leg=[('new', '新放进 inn'), ('chg', '从 out 的栈顶弹出')],
-          foot='倒一次，顺序反过来一次：inn 里最早进来的，到了 out 的栈顶，最先出去。')
+    table('lce-two-stacks', ['操作', 'in_stack（栈底 → 栈顶）', 'out_stack（栈底 → 栈顶）', '这一步', '返回'],
+          [110, 230, 230, 400, 60], rows,
+          leg=[('new', '新放进 in_stack'), ('chg', '从 out_stack 的栈顶弹出')],
+          foot='倒一次，顺序反过来一次：in_stack 里最早进来的，到了 out_stack 的栈顶，最先出去。')
 
 
 def temps():
@@ -138,7 +138,7 @@ def temps():
         while stk and a[stk[-1]] < x:
             j = stk.pop()
             res[j] = i - j
-            got.append(f'res[{j}] = {i} - {j} = {i - j}')
+            got.append(f'result[{j}] = {i} - {j} = {i - j}')
         bc = [(f'{j}:{a[j]}', 'n' if j in stk else 'chg') for j in before]
         stk.append(i)
         rows.append([T(f'i = {i}，{x} 度'), bc, T('，'.join(got) or '—', 'red' if got else 'gry'),
@@ -146,7 +146,7 @@ def temps():
     rows.append([T('结束'), [(f'{j}:{a[j]}', 'n') for j in stk], T('还在栈里的没等到，保持 0', 'gry'), ''])
     assert res == [1, 1, 4, 2, 1, 1, 0, 0]
     table('lce-temps', ['今天', '进来时的栈（下标:温度）', '被弹出的那些天记答案', '入栈后'],
-          [150, 250, 400, 240], rows, cw=58,
+          [150, 250, 460, 240], rows, cw=58,
           leg=[('chg', '被弹出：今天比它暖，它等到了'), ('new', '新入栈：开始等')],
           foot=f'temperatures = {a}  →  {res}')
 
@@ -292,6 +292,99 @@ def window_max():
           foot=f'nums = {nums}，k = 3  →  结果 {res}')
 
 
+def mono_trace():
+    nums, stack, result, rows = [3, 4, 2, 7, 5], [], [], []
+    for i, x in enumerate(nums):
+        before = list(stack)
+        while stack and nums[stack[-1]] >= x:
+            stack.pop()
+        bc = [(f'{j}:{nums[j]}', ('hit' if j == stack[-1] else 'n') if j in stack else 'chg') for j in before]
+        result.append(nums[stack[-1]] if stack else -1)
+        stack.append(i)
+        rows.append([T(f'i = {i}，x = {x}'), bc, T(str(result[-1]), 'grn'),
+                     [(f'{j}:{nums[j]}', 'new' if j == i else 'n') for j in stack]])
+    assert result == [-1, 3, -1, 2, 2]
+    table('lce-mono-trace', ['当前的数', '① 弹：进来时的栈（下标:值，栈底 → 栈顶）', '② 读：答案', '③ 进：入栈后'],
+          [140, 340, 120, 200], rows, cw=52,
+          leg=[('chg', '被弹掉（值 >= x）'), ('hit', '弹完后的栈顶，它的值 = 答案'), ('new', '新入栈')],
+          foot=f'nums = {nums}  →  result = {result}')
+
+
+def mono_index():
+    nums, stack, result, rows = [2, 1, 5, 3], [], [-1] * 4, []
+    for i, x in enumerate(nums):
+        before, got = list(stack), []
+        while stack and nums[stack[-1]] < x:
+            j = stack.pop()
+            result[j] = i
+            got.append(f'result[{j}] = {i}')
+        bc = [(f'{j}:{nums[j]}', 'n' if j in stack else 'chg') for j in before]
+        stack.append(i)
+        rows.append([T(f'i = {i}，x = {x}'), bc, T('，'.join(got) or '—', 'red' if got else 'gry'),
+                     [(f'{j}:{nums[j]}', 'new' if j == i else 'n') for j in stack]])
+    rows.append([T('结束'), [(f'{j}:{nums[j]}', 'n') for j in stack], T('还在栈里的保持 -1', 'gry'), ''])
+    table('lce-mono-index', ['当前', '进来时的栈（下标:值）', '被弹出时记答案', '入栈后'],
+          [140, 250, 290, 200], rows, cw=52,
+          leg=[('chg', '被弹出：等到答案了，答案是当前的 i'), ('new', '新入栈：开始等答案')],
+          foot=f'nums = {nums}  →  result = {result}')
+
+
+def kmp_shift():
+    s = S()
+    X, W, y = 190, 43, 14
+    text, pattern = 'aabaabaaf', 'aabaaf'
+    s.text(LX, y + 6, '下标', 13, SUB, 'start')
+    for i in range(len(text)):
+        s.text(X + i * W + 20, y + 6, i, 13, SUB, mono=True)
+    y += 24
+    s.text(LX, y + 17, 'text', 16, INK, 'start', bold=True, mono=True)
+    cells(s, X, y, [(c, 'chg' if i == 5 else 'n') for i, c in enumerate(text)])
+    y1 = y + 62
+    s.text(LX, y1 + 17, 'pattern（失配时）', 14, INK, 'start', bold=True)
+    cells(s, X, y1, [(c, 'hit' if i < 3 else 'new' if i < 5 else 'chg') for i, c in enumerate(pattern)])
+    s.text(X + 6 * W + 16, y1 + 17, 'j = 5 失配：text[5] 是 b，pattern[5] 是 f', 13.5, COL['red'], 'start', bold=True)
+    y2 = y1 + 84
+    s.text(LX, y2 + 17, 'pattern（j 退到 2）', 14, INK, 'start', bold=True)
+    cells(s, X + 3 * W, y2, [(c, 'new' if i < 2 else 'n' if i == 2 else 'off') for i, c in enumerate(pattern)])
+    for i in (3, 4):
+        s.seg(X + i * W + 20, y1 + 37, X + i * W + 20, y2 - 3, 'org', dash=1)
+    s.text(X + 5 * W + 6, (y1 + 34 + y2) / 2, '结尾的 aa = 开头的 aa，直接对齐，不用重比', 13.5, COL['org'], 'start', bold=True)
+    ptr(s, X + 5 * W + 20, y2 + 34, 'j = 2', 'blue')
+    s.text(X + 5 * W + 54, y2 + 72, '从这里接着和 text[5] 比；text 的指针 i 没有回退', 13.5, COL['blue'], 'start')
+    legend(s, LX, y2 + 104, [('hit', '已匹配'), ('new', '相等的前缀 / 后缀'), ('chg', '失配的位置')])
+    s.save('lce-kmp-shift')
+
+
+def kmp_next():
+    s = S()
+    X, W, y = 110, 43, 44
+    pattern = 'aabaaf'
+    next_, j = [0] * len(pattern), 0
+    for i in range(1, len(pattern)):
+        while j and pattern[i] != pattern[j]:
+            j = next_[j - 1]
+        if pattern[i] == pattern[j]:
+            j += 1
+        next_[i] = j
+    assert next_ == [0, 1, 0, 1, 2, 0]
+    brace(s, X + 2, X + 2 * W - 5, y - 8, '前缀 aa')
+    brace(s, X + 3 * W + 2, X + 5 * W - 5, y - 8, '后缀 aa')
+    s.text(LX, y + 17, 'pattern', 16, INK, 'start', bold=True, mono=True)
+    cells(s, X, y, [(c, 'new' if i in (0, 1, 3, 4) else 'n' if i == 2 else 'off') for i, c in enumerate(pattern)])
+    y += 46
+    s.text(LX, y + 8, '下标 i', 13, SUB, 'start')
+    for i in range(6):
+        s.text(X + i * W + 20, y + 8, i, 13, SUB, mono=True)
+    y += 30
+    s.text(LX, y + 17, 'next_', 16, INK, 'start', bold=True, mono=True)
+    cells(s, X, y, [(v, 'hit' if i == 4 else 'off') for i, v in enumerate(next_)])
+    s.text(X + 6 * W + 24, y - 60, '看 i = 4：只看前 5 个字符 "aabaa"', 14, INK, 'start', bold=True)
+    s.text(X + 6 * W + 24, y - 34, '开头的 "aa" 和结尾的 "aa" 一样，最长就是 2', 14, INK, 'start')
+    s.text(X + 6 * W + 24, y - 8, '所以 next_[4] = 2', 14, COL['grn'], 'start', bold=True)
+    s.save('lce-kmp-next')
+
+
 if __name__ == '__main__':
-    for f in (brackets, minstack, calc, decode, two_stacks, temps, hist, hist_trace, rain, window_max):
+    for f in (brackets, minstack, calc, decode, two_stacks, temps, hist, hist_trace, rain, window_max,
+              mono_trace, mono_index, kmp_shift, kmp_next):
         f()

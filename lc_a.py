@@ -4,7 +4,7 @@
 Run from this directory:  python3 lc_a.py
 """
 from make_diagrams import *  # noqa: F401,F403
-from make_diagrams_algo import row, marks, lines
+from make_diagrams_algo import row, marks, lines, blk
 
 
 # ---------- 二分 ----------
@@ -119,88 +119,147 @@ def bs_matrix():
 
 # ---------- 快速排序 ----------
 
-def partition_states(a, l, r, x, st=None):
-    lt, i, gt = l, l, r
-    while i <= gt:
-        if a[i] < x:
-            a[lt], a[i] = a[i], a[lt]
-            lt, i = lt + 1, i + 1
-        elif a[i] > x:
-            a[i], a[gt] = a[gt], a[i]
-            gt -= 1
-        else:
+def partition(nums, left, right):
+    """The template's partition step. Returns (i, j, pivot) after the loop."""
+    pivot = nums[(left + right) // 2]
+    i, j = left, right
+    while i <= j:
+        while nums[i] < pivot:
             i += 1
-    return lt, gt
+        while nums[j] > pivot:
+            j -= 1
+        if i <= j:
+            nums[i], nums[j] = nums[j], nums[i]
+            i += 1
+            j -= 1
+    return i, j, pivot
+
+
+def qs_idea():
+    s = S()
+    x, y, w, h = 40, 30, 190, 44
+    for k, (t, st) in enumerate((('都 <= pivot', 'n'), ('还没看', 'off'), ('都 >= pivot', 'new'))):
+        blk(s, x + k * w, y, w, h, t, st, 15)
+    for label, px, col in (('left', x + 20, 'gry'), ('i', x + w + 16, 'blue'), ('j', x + 2 * w - 20, 'org'),
+                           ('right', x + 3 * w - 24, 'gry')):
+        ptr(s, px, y + h, label, col)
+    lines(s, x, y + h + 64, ['i 从左往右走，走过的都 <= pivot  ｜  j 从右往左走，走过的都 >= pivot  ｜  两个指针错开时，整段就分好了'],
+          color=SUB)
+    s.save('lca-qs-idea')
+
+
+def qs_trace():
+    a = [5, 2, 4, 6, 1, 3]
+    n = len(a)
+    left, right = 0, n - 1
+    mid = (left + right) // 2
+    pivot = a[mid]
+    i, j = left, right
+    rows = [(f'开始：pivot = nums[{mid}] = {pivot}，i 在最左，j 在最右', a[:], i, j, None)]
+    while i <= j:
+        while a[i] < pivot:
+            i += 1
+        while a[j] > pivot:
+            j -= 1
+        if i <= j:
+            rows.append((f'i 停在 {a[i]}（>= {pivot}），j 停在 {a[j]}（<= {pivot}）：交换这两个数', a[:], i, j, 'swap'))
+            a[i], a[j] = a[j], a[i]
+            i += 1
+            j -= 1
+        else:
+            rows.append((f'i 停在 {a[i]}，j 停在 {a[j]}：i 已经在 j 右边，不交换，结束', a[:], i, j, 'end'))
+    if rows[-1][4] != 'end':
+        rows.append(('交换后各走一步：i 已经在 j 右边，结束', a[:], i, j, 'end'))
+    s = S()
+    X, y = 500, 30
+    for d, arr, pi, pj, kind in rows:
+        s.text(LX, y + 17, d, 14, INK, 'start', bold=True)
+        if kind == 'end':
+            sts = ['n' if q <= pj else 'new' if q >= pi else 'hit' for q in range(n)]
+        elif kind == 'swap':
+            sts = ['chg' if q in (pi, pj) else 'n' if q < pi else 'new' if q > pj else 'off' for q in range(n)]
+        else:
+            sts = ['off'] * n
+        cs = row(s, X, y, arr, sts, cw=46, idx='top' if kind is None else None)
+        marks(s, cs, y + 34, [('i', pi, 'blue'), ('j', pj, 'org')])
+        y += 104
+    legend(s, LX, y, [('n', '确定 <= pivot'), ('new', '确定 >= pivot'), ('off', '还没看'), ('chg', '要交换的两个')])
+    fi, fj = rows[-1][2], rows[-1][3]
+    s.text(LX, y + 44, f'结束时 j = {fj}，i = {fi}。左边一段 [0, {fj}] = {a[:fj + 1]}，右边一段 [{fi}, {n - 1}] = {a[fi:]}，各自递归',
+           14, INK, 'start', bold=True)
+    s.save('lca-qs-trace')
+    return rows
 
 
 def qs_select_trace():
     a, k = [3, 2, 1, 5, 6, 4], 2
-    t = len(a) - k
-    pivots = [3, 5]                                     # 假设随机挑到的基准
-    l, r = 0, len(a) - 1
+    n = len(a)
+    target = n - k
+    left, right = 0, n - 1
     s = S()
-    X, y, cw = 440, 62, 50
-    s.text(LX, 16, f'LC 215：nums = {a}，k = 2  →  排好序后第 2 大在下标 t = 6 − 2 = {t}', 14.5, INK, 'start', bold=True)
+    X, y, cw = 560, 62, 50
+    s.text(LX, 16, f'LC 215：nums = {a}，k = 2  →  排好序后第 2 大在下标 target = 6 − 2 = {target}', 14.5, INK, 'start', bold=True)
     s.text(LX, y + 17, '开始：整段 [0, 5] 都要找', 14, INK, 'start', bold=True)
     cs = row(s, X, y, a, 'off', cw=cw, idx='top')
-    marks(s, cs, y + 34, [('t', t, 'red')])
+    marks(s, cs, y + 34, [('target', target, 'red')])
     y += 100
-    for rd, x in enumerate(pivots, 1):
-        assert x in a[l:r + 1]
-        lt, gt = partition_states(a, l, r, x)
-        sts = ['del' if j < l or j > r else 'n' if j < lt else 'hit' if j <= gt else 'new' for j in range(len(a))]
-        s.text(LX, y + 8, f'第 {rd} 轮：在 [{l}, {r}] 里挑到基准 x = {x}', 14, INK, 'start', bold=True)
-        if t < lt:
-            d, col = f't = {t} 在左段 → 只留 [{l}, {lt - 1}]', 'blue'
-        elif t > gt:
-            d, col = f't = {t} 在右段 → 只留 [{gt + 1}, {r}]', 'org'
+    rd, log = 0, []
+    while left < right:
+        rd += 1
+        i, j, pivot = partition(a, left, right)
+        sts = ['del' if q < left or q > right else 'n' if q <= j else 'new' if q >= i else 'hit' for q in range(n)]
+        s.text(LX, y + 8, f'第 {rd} 轮：在 [{left}, {right}] 里划分，pivot = {pivot}', 14, INK, 'start', bold=True)
+        if target <= j:
+            d, col, nl, nr = f'target = {target} <= j → 只留左边 [{left}, {j}]', 'blue', left, j
+        elif target >= i:
+            d, col, nl, nr = f'target = {target} >= i → 只留右边 [{i}, {right}]', 'org', i, right
         else:
-            d, col = f't = {t} 在中段 → 答案就是 x = {x}', 'grn'
-        s.text(LX, y + 30, f'分完：lt = {lt}，gt = {gt}。{d}', 13.5, COL[col], 'start', bold=True)
+            d, col, nl, nr = f'target 夹在 j 和 i 中间 → 已经排好', 'grn', target, target
+        s.text(LX, y + 30, f'分完：j = {j}，i = {i}。{d}', 13.5, COL[col], 'start', bold=True)
         cs = row(s, X, y, a, sts, cw=cw)
-        marks(s, cs, y + 34, [('t', t, 'red')])
-        if t < lt:
-            r = lt - 1
-        elif t > gt:
-            l = gt + 1
-        else:
-            break
+        marks(s, cs, y + 34, [('target', target, 'red')])
+        log.append((rd, left, right, pivot, a[:], j, i))
+        left, right = nl, nr
         y += 92
-    legend(s, LX, y + 88, [('n', '比 x 小'), ('hit', '等于 x'), ('new', '比 x 大'), ('del', '已经扔掉，不再看')])
+    legend(s, LX, y + 4, [('n', '左边一段（<= pivot）'), ('new', '右边一段（>= pivot）'), ('del', '已经扔掉，不再看')])
+    s.text(LX, y + 48, f'只剩 [{left}, {right}] 一个位置，停。答案 nums[{target}] = {a[target]}', 14, INK, 'start', bold=True)
     s.save('lca-qs-select-trace')
+    return log
 
 
 def qs_colors():
     a = [2, 0, 2, 1, 1, 0]
     n = len(a)
-    lt, i, gt = 0, 0, n - 1
-    states = [('开始', a[:], lt, i, gt)]
-    while i <= gt:
+    low, i, high = 0, 0, n - 1
+    states = [('开始', a[:], low, i, high)]
+    while i <= high:
         v = a[i]
         if v == 0:
-            d = f'看 0：和下标 {lt} 交换，lt、i 右移'
-            a[lt], a[i] = a[i], a[lt]
-            lt, i = lt + 1, i + 1
+            d = f'看 0：和下标 {low} 交换，low、i 右移'
+            a[low], a[i] = a[i], a[low]
+            low, i = low + 1, i + 1
         elif v == 2:
-            d = f'看 2：和下标 {gt} 交换，gt 左移，i 不动'
-            a[i], a[gt] = a[gt], a[i]
-            gt -= 1
+            d = f'看 2：和下标 {high} 交换，high 左移，i 不动'
+            a[i], a[high] = a[high], a[i]
+            high -= 1
         else:
             d = '看 1：留在中间，i 右移'
             i += 1
-        states.append((d, a[:], lt, i, gt))
+        states.append((d, a[:], low, i, high))
     s = S()
-    for k, (d, arr, lt, i, gt) in enumerate(states):
+    for k, (d, arr, low, i, high) in enumerate(states):
         ox, y = LX, 16 + k * 104
         s.text(ox, y + 17, d, 14, INK, 'start', bold=True)
-        cs = row(s, ox + 330, y, arr, ['n' if j < lt else 'hit' if j < i else 'off' if j <= gt else 'new' for j in range(n)], cw=46)
-        ps = [('lt', lt, 'blue')] + ([('i', i, 'org')] if i < n else []) + ([('gt', gt, 'red')] if gt >= 0 else [])
+        cs = row(s, ox + 330, y, arr, ['n' if q < low else 'hit' if q < i else 'off' if q <= high else 'new' for q in range(n)], cw=46)
+        ps = [('low', low, 'blue')] + ([('i', i, 'org')] if i < n else []) + ([('high', high, 'red')] if high >= 0 else [])
         marks(s, cs, y + 34, ps)
     y = 16 + len(states) * 104
     legend(s, LX, y, [('n', '0（红）'), ('hit', '1（白）'), ('off', '还没看'), ('new', '2（蓝）')])
-    s.text(LX, y + 44, f'i 超过 gt，停。结果 {states[-1][1]}', 14, INK, 'start', bold=True)
+    s.text(LX, y + 44, f'i 超过 high，停。结果 {states[-1][1]}', 14, INK, 'start', bold=True)
     s.save('lca-qs-colors')
     return states
+
+
 
 
 # ---------- 归并排序 ----------
@@ -303,6 +362,86 @@ def ms_inv_trace():
           foot=f'nums = {nums}：' + ' + '.join(str(r[3]) for r in log) + f' = {total} 个逆序对')
     return log, total
 
+def ms_merge_two():
+    L, R, i, j, result, rows = [1, 4, 7], [2, 3, 9], 0, 0, [], []
+
+    def side(a, p):
+        return [(v, 'off' if k < p else 'new' if k == p else 'n') for k, v in enumerate(a)]
+
+    while i < len(L) and j < len(R):
+        lc, rc = side(L, i), side(R, j)
+        if L[i] <= R[j]:
+            t = f'{L[i]} 和 {R[j]} 比：拿左边的 {L[i]}'
+            result.append(L[i])
+            i += 1
+        else:
+            t = f'{L[i]} 和 {R[j]} 比：拿右边的 {R[j]}'
+            result.append(R[j])
+            j += 1
+        rows.append([('t', t, INK), lc, rc, [(v, 'hit' if k == len(result) - 1 else 'n') for k, v in enumerate(result)]])
+    rest = L[i:] + R[j:]
+    rows.append([('t', '左边拿完：右边剩下的直接接上', INK), side(L, i), side(R, j),
+                 [(v, 'n') for v in result] + [(v, 'hit') for v in rest]])
+    table('lca-ms-merge-two', ['每一步', 'left', 'right', 'result（这一步之后）'], [270, 160, 160, 290], rows,
+          leg=[('new', '两边各自「还没拿的第一个」（指针 i、j）'), ('off', '已经拿走'), ('hit', '刚放进 result')])
+
+
+def ms_inversions():
+    s = S()
+    y = 62
+    s.text(LX, y + 17, 'left', 15, INK, 'start', bold=True, mono=True)
+    cl = row(s, 80, y, [2, 5, 8], ['off', 'chg', 'chg'])
+    s.text(246, y + 17, 'right', 15, INK, 'start', bold=True, mono=True)
+    cr = row(s, 316, y, [3, 6, 9], ['new', 'n', 'n'])
+    brace(s, cl[1] - 19, cl[2] + 19, y - 10, '还没拿的：都比 3 大', 'red')
+    marks(s, cl, y + 34, [('i = 1', 1, 'red')])
+    marks(s, cr, y + 34, [('j = 0', 0, 'org')])
+    lines(s, 480, y - 22, [('5 > 3：这一步拿的是右边的 3', 'org'), 'left 是有序的 → 5 后面的数也都比 3 大',
+                           '它们在原数组里都排在 3 前面 → 每个都和 3 组成一个逆序对',
+                           ('count += len(left) − i = 3 − 1 = 2', 'red')], gap=24)
+    s.save('lca-ms-inversions')
+
+
+def float_bs():
+    s = S()
+    X0, W, n, eps = 70, 440, 2, 1e-8
+    left, right, y = 0.0, 2.0, 62
+
+    def px(v):
+        return X0 + v / 2 * W
+
+    s.text(LX, 18, '求 2 的立方根：check(x) = x³ >= 2，区间从 [0, 2] 开始，每次砍一半', 14.5, INK, 'start', bold=True)
+    top = y - 24
+    for _ in range(5):
+        s.seg(px(0), y, px(2), y, '#CBD5E1', sw=2)
+        s.rect(px(left), y - 5, px(right) - px(left), 10, '#BFDBFE', COL['blue'], rx=5)
+        mid = (left + right) / 2
+        s.seg(px(mid), y - 13, px(mid), y + 13, 'org', sw=2.5)
+        s.text(px(left) - 4, y + 20, f'{left:g}', 12, COL['blue'], 'end', mono=True)
+        s.text(px(right) + 4, y + 20, f'{right:g}', 12, COL['blue'], 'start', mono=True)
+        ok = mid ** 3 >= n
+        s.text(px(2) + 60, y, f'mid = {mid:g}：{mid:g}³ = {mid ** 3:.3f}  ' + ('>= 2，是：right = mid' if ok else '< 2，否：left = mid'),
+               13.5, INK, 'start')
+        if ok:
+            right = mid
+        else:
+            left = mid
+        y += 70
+    left, right, cnt = 0.0, 2.0, 0
+    while right - left > eps:
+        mid = (left + right) / 2
+        if mid ** 3 >= n:
+            right = mid
+        else:
+            left = mid
+        cnt += 1
+    ax = px(2 ** (1 / 3))
+    s.seg(ax, top, ax, y - 44, 'grn', dash=1, sw=1.5)
+    s.text(ax, y - 30, '答案 ≈ 1.26', 13, COL['grn'], bold=True)
+    s.text(LX, y, f'蓝色 = 当前区间 [left, right]，一直包着答案；橙色竖线 = mid；区间长度 <= eps = 1e-8 时停（这个例子一共 {cnt} 轮）', 13.5, SUB, 'start')
+    s.save('lca-float-bs')
+    return cnt
+
 
 if __name__ == '__main__':
     bs_range()
@@ -310,9 +449,14 @@ if __name__ == '__main__':
     bs_rotate_trace()
     bs_koko()
     bs_matrix()
-    qs_select_trace()
+    qs_idea()
+    print(qs_trace())
+    print(qs_select_trace())
     print(qs_colors())
     ms_88()
     ms_list()
     print(ms_inv_trace())
+    ms_merge_two()
+    ms_inversions()
+    print(float_bs())
     print('ok')

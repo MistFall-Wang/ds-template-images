@@ -152,7 +152,7 @@ def bfs_levels():
         s.text(LX, 60 + k * 70, f'第 {k} 层', 12.5, SUB, 'start')
     x = 300
     s.text(x, 18, '每一轮开始时的队列', 13, SUB, 'start', bold=True)
-    s.text(x + 190, 18, 'len(q)', 13, SUB, 'start', bold=True)
+    s.text(x + 170, 18, 'len(queue)', 13, SUB, 'start', bold=True)
     s.text(x + 260, 18, '这一轮取出的 level', 13, SUB, 'start', bold=True)
     s.text(x + 420, 18, '这一轮放进去的', 13, SUB, 'start', bold=True)
     rounds = [([3], [9, 20]), ([9, 20], [15, 7]), ([15, 7], [])]
@@ -162,7 +162,7 @@ def bfs_levels():
         s.text(x + 210, y + 17, len(q), 15, INK, bold=True, mono=True)
         s.text(x + 260, y + 17, str(q), 14, COL['grn'], 'start', bold=True, mono=True)
         s.text(x + 420, y + 17, '、'.join(map(str, nxt)) or '无', 14, INK, 'start')
-    s.text(LX, 250, '进入 for 之前先算好 len(q)：这一轮只取这么多个，新放进去的孩子留到下一轮', 13.5, SUB, 'start')
+    s.text(LX, 250, '进入 for 之前先算好 len(queue)：这一轮只取这么多个，新放进去的孩子留到下一轮', 13.5, SUB, 'start')
     s.save('lch-bfs-levels')
 
 
@@ -180,7 +180,7 @@ def bfs_lock():
     s.text(270 + 35, 10, '往上拨 +1', 12.5, SUB)
     s.text(370 + 35, 10, '往下拨 −1', 12.5, SUB)
     lines(s, 480, 60, [('点 = 一个四位字符串，一共 10000 个', INK), ('边 = 拨一下：4 个轮 × 2 个方向 = 8 个邻居', INK),
-                       '0 往下拨是 9，9 往上拨是 0：(d + 1) % 10、(d − 1) % 10', '不用提前建图：取出一个状态，现场算出它的 8 个邻居',
+                       '0 往下拨是 9，9 往上拨是 0：(digit + 1) % 10、(digit − 1) % 10', '不用提前建图：取出一个状态，现场算出它的 8 个邻居',
                        ('deadends 里的状态 = 墙，不能走', 'red')], gap=28)
     s.save('lch-bfs-lock')
 
@@ -233,7 +233,7 @@ def topo_dir():
         s.text(LX, y, f'[{a}, {b}]', 14, INK, 'start', mono=True)
         s.text(LX + 90, y, f'先修 {b}，才能修 {a}', 14, INK, 'start')
         s.text(LX + 280, y, f'{b} → {a}', 14, COL['org'], 'start', bold=True, mono=True)
-        s.text(LX + 350, y, f'g[{b}].append({a})；indegree[{a}] += 1', 12.5, SUB, 'start', mono=True)
+        s.text(LX + 350, y, f'graph[{b}].append({a})；indegree[{a}] += 1', 12.5, SUB, 'start', mono=True)
     graph(s, 720, 70, {0: (0, 0), 1: (110, 0), 2: (0, 90), 3: (110, 90)}, [(0, 1), (0, 2), (1, 3), (2, 3)])
     s.text(775, 30, '箭头从「先修的」指向「后修的」', 13, SUB)
     s.text(LX, 236, '写在后面的 b 是先修课，是箭头的起点。照着字面写成 a → b 就全反了', 13.5, COL['red'], 'start', bold=True)
@@ -271,7 +271,7 @@ def topo_2050():
           {v: (f'{time[v]} 个月' if where[v] != 'b' else f'{time[v]} 个月', SUB, where[v]) for v in pos},
           names={v: v + 1 for v in pos})
     x = 560
-    s.text(x, 22, 'finish[v] = v 最早第几个月修完', 14.5, INK, 'start', bold=True)
+    s.text(x, 22, 'finish[node] = 这门课最早第几个月修完', 14.5, INK, 'start', bold=True)
     txt = []
     for u in order:
         pre = [a - 1 for a, b in rel if b - 1 == u]
@@ -292,12 +292,12 @@ def topo_check():
     E = [(0, 1), (0, 2), (1, 3), (2, 3)]
     s = S()
     for k, (order, title) in enumerate((([0, 2, 1, 3], 'order = [0, 2, 1, 3]'), ([0, 1, 3, 2], 'order = [0, 1, 3, 2]'))):
-        ox = 30 + k * 420
+        ox = 50 + k * 440
         pos = {u: i for i, u in enumerate(order)}
         bad = [(a, b) for a, b in E if pos[a] > pos[b]]
         s.text(ox, 18, title, 14.5, INK, 'start', bold=True, mono=True)
         cs = row(s, ox + 40, 118, order, 'n', cw=62, ch=38, size=16, idx='bot')
-        s.text(ox + 40 - 8, 118 + 38 + 11, 'pos', 12, SUB, 'end', mono=True)
+        s.text(ox + 40 - 8, 118 + 38 + 11, 'position', 12, SUB, 'end', mono=True)
         for a, b in E:
             x1, x2 = cs[pos[a]], cs[pos[b]]
             ok = pos[a] < pos[b]
@@ -308,7 +308,7 @@ def topo_check():
                 s.curve(x1 - 6, 114, x2 + 6, 114, -14 * span, 'red')
         if bad:
             a, b = bad[0]
-            lines(s, ox, 206, [(f'边 {a} → {b}：pos[{a}] = {pos[a]} > pos[{b}] = {pos[b]}，{a} 排到了 {b} 后面', 'red'),
+            lines(s, ox, 206, [(f'边 {a} → {b}：position[{a}] = {pos[a]} > position[{b}] = {pos[b]}，{a} 排到了 {b} 后面', 'red'),
                                ('不合法', 'red')], gap=24)
         else:
             lines(s, ox, 206, [('4 条边的箭头全部从左指向右', 'grn'), ('合法', 'grn')], gap=24)
@@ -340,7 +340,7 @@ def dij_743():
     graph(s, 70, 60, pos, [(a - 1, b - 1, w) for a, b, w in times], {1: 'new', 0: 'n', 2: 'n', 3: 'hit'},
           {v: (f'dist = {dist[v]}', 'red' if dist[v] == max(dist) else INK, 'b' if v == 0 else 't') for v in pos},
           names={v: v + 1 for v in pos})
-    lines(s, 420, 40, [('从 2 号点发信号，边上的数 = 传过去要多久', INK), 'dist[v] = v 最早什么时候收到信号（起点到 v 的最短路）',
+    lines(s, 420, 40, [('从 2 号点发信号，边上的数 = 传过去要多久', INK), 'dist[node] = 这个点最早什么时候收到信号（起点到它的最短路）',
                        ('所有点都收到 = 等最晚的那个：max(dist) = 2', 'red'), '有的点 dist 还是 ∞：永远收不到，返回 −1'], gap=28)
     s.save('lch-dij-743')
     print('743', dist)
@@ -484,7 +484,40 @@ def kruskal_1584():
     print('1584', log)
 
 
+# ---------- 旧图（gr-*）换新变量名，另存为 lch-* ----------
+
+import re
+import make_diagrams_graph as _old
+
+RENAMES = [(r'^d=', 'dist='), (r' c=', ' count='), (r'^u = (\d+)$', r'node = \1'),
+           (r'^绿色的边：dist\[v\] 最后一次被更新时，v 是从谁走过来的$', '绿色的边：dist[neighbor] 最后一次被更新时，是从哪个 node 走过来的'),
+           (r'^d = dist，c = count（到这个点的最短路走了几条边）。', 'count = 到这个点的最短路走了几条边。')]
+
+
+def as_lch(func):
+    """Redraw an older gr-* diagram as lch-* with the renamed variables; the gr-* files are not touched."""
+    old_text, old_save = S.text, S.save
+
+    def text(self, x, y, t, *a, **k):
+        t = str(t)
+        for pat, new in RENAMES:
+            t = re.sub(pat, new, t)
+        return old_text(self, x, y, t, *a, **k)
+
+    def save(self, name, *a, **k):
+        assert name.startswith('gr-'), name          # never write over an old image
+        return old_save(self, 'lch-' + name[3:], *a, **k)
+
+    S.text, S.save = text, save
+    try:
+        func()
+    finally:
+        S.text, S.save = old_text, old_save
+
+
 if __name__ == '__main__':
+    for f in (_old.bfs_trace, _old.dijkstra, _old.dijkstra_path, _old.bf_backup, _old.bf_rounds, _old.spfa, _old.negcycle):
+        as_lch(f)
     for f in (bfs_mark, bfs_1091, bfs_oranges, bfs_542, bfs_levels, bfs_lock, bfs_ladder, topo_dir, topo_2050,
               topo_check, dij_743, dij_1631, dij_778, dij_787, dij_787_bf, kruskal_1584):
         f()
