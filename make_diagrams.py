@@ -1047,18 +1047,18 @@ def set_venn():
 
 
 def two_sum():
-    nums, target, pos, rows = [3, 2, 7, 15], 9, {}, []
+    nums, target, index_of, rows = [3, 2, 7, 15], 9, {}, []
     for i, x in enumerate(nums):
         need = target - x
-        have = [(f'{k}→{v}', 'hit' if k == need else 'n') for k, v in pos.items()]
-        if need in pos:
+        have = [(f'{k}→{v}', 'hit' if k == need else 'n') for k, v in index_of.items()]
+        if need in index_of:
             rows.append([('t', f'i = {i}，x = {x}', INK), ('t', f'9 - {x} = {need}', INK), have,
-                         ('t', f'有 {need}，下标 {pos[need]}  →  返回 [{pos[need]}, {i}]', 'grn')])
+                         ('t', f'有 {need}，下标 {index_of[need]}  →  返回 [{index_of[need]}, {i}]', 'grn')])
             break
         rows.append([('t', f'i = {i}，x = {x}', INK), ('t', f'9 - {x} = {need}', INK), have,
                      ('t', f'没有 {need}，把 {x}→{i} 存进去', 'gry')])
-        pos[x] = i
-    table('two-sum', ['当前', '要找的数', 'pos 里已有的（值→下标）', '结果'], [150, 130, 250, 300], rows, cw=52,
+        index_of[x] = i
+    table('two-sum', ['当前', '要找的数', 'index_of 里已有的（值→下标）', '结果'], [150, 130, 250, 300], rows, cw=52,
           foot='nums = [3, 2, 7, 15]，target = 9  →  [1, 2]')
 
 

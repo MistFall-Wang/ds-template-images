@@ -74,19 +74,19 @@ def bs_koko():
     s = S()
     piles, h = [3, 6, 7, 11], 8
     X, y, cw = 170, 50, 50
-    s.text(LX, 18, 'LC 875：piles = [3, 6, 7, 11]，h = 8。check(k) = 用速度 k 吃完要的小时数 <= 8', 14.5, INK, 'start', bold=True)
+    s.text(LX, 18, 'LC 875：piles = [3, 6, 7, 11]，h = 8。check(speed) = 用速度 speed 吃完要的小时数 <= 8', 14.5, INK, 'start', bold=True)
     ks = list(range(1, max(piles) + 1))
     hrs = [sum((p + k - 1) // k for p in piles) for k in ks]
-    s.text(LX, y + 17, '速度 k', 15, INK, 'start', bold=True)
+    s.text(LX, y + 17, '速度 speed', 15, INK, 'start', bold=True)
     cs = row(s, X, y, ks, ['hit' if t <= h else 'sent' for t in hrs], cw=cw)
     s.text(LX, y + 54, '要几小时', 14, SUB, 'start')
-    s.text(LX, y + 80, 'check(k)', 14, SUB, 'start', mono=True)
+    s.text(LX, y + 80, 'check(speed)', 14, SUB, 'start', mono=True)
     for t, c in zip(hrs, cs):
         s.text(c, y + 54, t, 13, SUB, mono=True)
         s.text(c, y + 80, '是' if t <= h else '否', 15, COL['grn' if t <= h else 'gry'], bold=True)
     first = next(i for i, t in enumerate(hrs) if t <= h)
     s.arrow(cs[first], y + 118, cs[first], y + 96, 'grn')
-    s.text(cs[first] - 8, y + 130, f'第一个「是」：答案 k = {ks[first]}', 13.5, COL['grn'], 'start', bold=True)
+    s.text(cs[first] - 8, y + 130, f'第一个「是」：答案 {ks[first]}', 13.5, COL['grn'], 'start', bold=True)
     s.text(cs[0] - 20, y + 130, '吃得越快，用时越少', 13.5, SUB, 'start')
     s.save('lca-bs-koko')
 

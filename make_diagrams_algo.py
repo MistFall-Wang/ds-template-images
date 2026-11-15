@@ -310,20 +310,22 @@ def bs_four():
 
 def bs_answer():
     s = S()
+    x = 8
     X, y, cw = 170, 50, 50
-    s.text(LX, 18, '求 n = 10 的平方根（向下取整）：check(x) = x * x > n', 14.5, INK, 'start', bold=True)
-    xs = list(range(11))
-    s.text(LX, y + 17, 'x', 15, INK, 'start', bold=True, mono=True)
-    cs = row(s, X, y, xs, ['sent' if v * v <= 10 else 'hit' for v in xs], cw=cw)
-    s.text(LX, y + 54, 'x * x', 14, SUB, 'start', mono=True)
-    s.text(LX, y + 80, 'check(x)', 14, SUB, 'start', mono=True)
-    for v, c in zip(xs, cs):
+    s.text(LX, 18, f'求 x = {x} 的平方根（向下取整）：条件是 mid * mid > x', 14.5, INK, 'start', bold=True)
+    mids = list(range(x + 1))
+    s.text(LX, y + 17, 'mid', 15, INK, 'start', bold=True, mono=True)
+    cs = row(s, X, y, mids, ['sent' if v * v <= x else 'hit' for v in mids], cw=cw)
+    s.text(LX, y + 54, 'mid * mid', 14, SUB, 'start', mono=True)
+    s.text(LX, y + 80, 'mid * mid > x', 14, SUB, 'start', mono=True)
+    for v, c in zip(mids, cs):
         s.text(c, y + 54, v * v, 13, SUB, mono=True)
-        s.text(c, y + 80, '是' if v * v > 10 else '否', 15, COL['grn' if v * v > 10 else 'gry'], bold=True)
-    s.arrow(cs[4], y + 118, cs[4], y + 96, 'grn')
-    s.text(cs[4] - 8, y + 130, '第一个「是」：first_true 返回 4', 13.5, COL['grn'], 'start', bold=True)
-    s.arrow(cs[3], y + 118, cs[3], y + 96, 'red')
-    s.text(cs[3] + 8, y + 130, '答案 = 4 − 1 = 3', 13.5, COL['red'], 'end', bold=True)
+        s.text(c, y + 80, '是' if v * v > x else '否', 15, COL['grn' if v * v > x else 'gry'], bold=True)
+    first = next(v for v in mids if v * v > x)
+    s.arrow(cs[first], y + 118, cs[first], y + 96, 'grn')
+    s.text(cs[first] - 8, y + 130, f'第一个「是」：循环结束时 left = {first}', 13.5, COL['grn'], 'start', bold=True)
+    s.arrow(cs[first - 1], y + 118, cs[first - 1], y + 96, 'red')
+    s.text(cs[first - 1] + 8, y + 130, f'答案 = {first} − 1 = {first - 1}', 13.5, COL['red'], 'end', bold=True)
     s.save('alg-bs-answer')
 
 

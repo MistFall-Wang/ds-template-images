@@ -87,12 +87,12 @@ def centroid():
     graph(s, 30, 66, pos, es, st, directed=False)
     s.text(LX, 16, 'n = 7，删掉点 1（虚线）：树断成 3 块', 14.5, INK, 'start', bold=True)
     x = 330
-    for k, (stl, t) in enumerate((('n', '上面那一块：n − size[1] = 7 − 4 = 3 个点'), ('new', '孩子 3 的子树：1 个点'),
+    for k, (stl, t) in enumerate((('n', '上面那一块：n − size = 7 − 4 = 3 个点'), ('new', '孩子 3 的子树：1 个点'),
                                   ('hit', '孩子 4 的子树：2 个点'))):
         f, kk, _, d = ST[stl]
         s.rect(x, 62 + k * 34, 20, 20, f, kk, d, rx=4)
         s.text(x + 30, 72 + k * 34, t, 14, INK, 'start')
-    lines(s, x, 176, [('size[1] = 1 + 1 + 2 = 4：dfs(1) 返回的子树大小', INK), ('删掉 1 后最大的一块 = max(1, 2, 3) = 3', 'red'),
+    lines(s, x, 176, [('dfs(1) 里 size = 1 + 1 + 2 = 4：它返回的子树大小', INK), ('删掉 1 后最大的一块 = max(1, 2, 3) = 3', 'red'),
                       '每个点都这样算一次，取最小的那个'], gap=26)
     s.save('gr-centroid')
 
@@ -547,7 +547,7 @@ def floyd_trace():
              lambda i, j: 'chg' if (i, j) in ch else 'new' if kk in (i, j) else 'off', cw=46, size=15)
         s.text(ox, oy + 182, cap, 13, COL['red'] if ch else INK, 'start', bold=bool(ch))
 
-    panel_grid('gr-floyd-trace', 4, 225, 240, draw, titles=['初始'] + [f'k = {k}：允许经过 {k}' for k in range(n)],
+    panel_grid('gr-floyd-trace', 4, 225, 240, draw, titles=['初始'] + [f'k = {k}：允许经过 ' + '、'.join(map(str, range(k + 1))) for k in range(n)],
                leg=[('new', '第 k 行、第 k 列：这一轮用来中转的值'), ('chg', '被改小的格子')])
 
 

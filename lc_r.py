@@ -145,8 +145,8 @@ def cost_trace():
     a, b = dp[i - 1] + cost[i - 1], dp[i - 2] + cost[i - 2]
     lines(s, LX, y2 + 78,
           [(f'dp[i]：站到第 i 阶上，最少已经付了多少。dp[0] = dp[1] = 0：可以直接从第 0 阶或第 1 阶出发（灰）', INK, False),
-           (f'算 dp[{i}]：从第 {i - 1} 阶跨 1 步上来，dp[{i - 1}] + cost[{i - 1}] = {dp[i - 1]} + {cost[i - 1]} = {a}；'
-            f'从第 {i - 2} 阶跨 2 步上来，dp[{i - 2}] + cost[{i - 2}] = {dp[i - 2]} + {cost[i - 2]} = {b}', 'red', False),
+           (f'算 dp[{i}]：从第 {i - 1} 阶跨 1 阶上来，dp[{i - 1}] + cost[{i - 1}] = {dp[i - 1]} + {cost[i - 1]} = {a}；'
+            f'从第 {i - 2} 阶跨 2 阶上来，dp[{i - 2}] + cost[{i - 2}] = {dp[i - 2]} + {cost[i - 2]} = {b}', 'red', False),
            (f'取小的：dp[{i}] = min({a}, {b}) = {dp[i]}。楼顶是下标 {n}（数组外面一格），答案 dp[{n}] = {dp[n]}', 'grn')], gap=25)
     s.save('lcr-cost-trace')
 
@@ -393,7 +393,7 @@ def grid_idea():
     m, n, r, c = 4, 5, 2, 3
     s = S()
     X, Y = 60, 60
-    s.text(LX, 20, 'dp[row][col]：走到这一格的答案。只能往右或往下走，所以走进一个格子只有两条路', 15, INK, 'start', bold=True)
+    s.text(LX, 20, 'dp[row][col]：走到这一格的答案。只能往右或往下走，所以走进一个格子的最后一步只有两种', 15, INK, 'start', bold=True)
     headers(s, X, Y, m, n, 58)
 
     def st(i, j):
@@ -631,8 +631,8 @@ def square_why():
            ('蓝框：以「上」为右下角的最大正方形', 'blue'), ('橙框：以「左」为右下角的最大正方形', 'org'),
            ('紫框：以「左上」为右下角的最大正方形', 'pur'),
            ('绿虚线：以这一格为右下角能得到的最大正方形', 'grn'),
-           '边长 k 的正方形 = 蓝、橙、紫三个都至少有 k − 1，',
-           '再加上绿格自己。三个里最短的那个卡住了 k，',
+           '三个邻居里最小的是 k：蓝、橙、紫三个框里都有 k × k，',
+           '再加上绿格自己，正好拼出 (k + 1) × (k + 1)，',
            ('所以 dp = min(上, 左, 左上) + 1', INK)], gap=25)
     s.save('lcr-square-why')
 
